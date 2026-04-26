@@ -6,12 +6,17 @@
 
 **Ingest Web Contents as Video Streams**
 
-> **Fork note:** This fork bumps the `grandiose` pin in `package.json`
-> to a commit that has the `mac && arm64` case in `binding.gyp`, enabling
-> a working **Apple Silicon (macOS arm64)** build in addition to the existing
-> macOS x64, Windows and Linux builds. A prebuilt `Vingester-mac-a64.zip`
-> is attached to the [Releases](https://github.com/ktamas77/vingester/releases) page.
-> Upstream PR: [rse/vingester#96](https://github.com/rse/vingester/pull/96).
+> **Fork note:** This fork adds:
+> - **Apple Silicon (macOS arm64) build** — bumps the `grandiose` pin to
+>   a commit with the `mac && arm64` case in `binding.gyp`. Upstream PR:
+>   [rse/vingester#96](https://github.com/rse/vingester/pull/96).
+> - **Syphon sink** (macOS only) — a third output sink alongside NDI and
+>   FFmpeg, using [node-syphon](https://github.com/benoitlahoz/node-syphon)
+>   to publish captured Web frames as a [Syphon](https://syphon.info/) source
+>   for local zero-network routing into Resolume / OBS / VDMX / TouchDesigner / etc.
+>
+> Prebuilt `Vingester-mac-a64.zip` is attached to the
+> [Releases](https://github.com/ktamas77/vingester/releases) page.
 
 About
 -----

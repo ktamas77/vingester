@@ -14,6 +14,16 @@ const pcmconvert       = require("pcm-convert")
 const ebml             = require("ebml")
 const Opus             = require("@discordjs/opus")
 
+/*  Syphon is an optional macOS-only dependency (zero-network local
+    GPU video routing to Resolume / OBS / VDMX / etc.)  */
+let SyphonMetalServer = null
+if (process.platform === "darwin") {
+    try {
+        SyphonMetalServer = require("node-syphon").SyphonMetalServer
+    }
+    catch (err) { /* node-syphon not installed on this platform */ }
+}
+
 /*  require own modules  */
 const util             = require("./vingester-util.js")
 const FFmpeg           = require("./vingester-ffmpeg.js")
@@ -42,6 +52,7 @@ class BrowserWorker {
         this.timeStart       = (BigInt(Date.now()) * BigInt(1e6) - process.hrtime.bigint())
         this.ndiSender       = null
         this.ndiTimer        = null
+        this.syphonServer    = null
         this.ffmpeg          = null
         this.opusEncoder     = null
         this.burst1          = null
@@ -99,6 +110,18 @@ class BrowserWorker {
                     electron.ipcRenderer.send("tally",
                         { status: this.ndiStatus, connections: conns, id: this.id })
                 }, 1 * 500)
+            }
+            if (this.cfg.s && SyphonMetalServer !== null) {
+                /*  start a Syphon (macOS GPU sharing) server to publish frames
+                    locally with zero network/encoder overhead  */
+                try {
+                    this.syphonServer = new SyphonMetalServer(title)
+                    this.log.info(`Syphon server started: "${title}"`)
+                }
+                catch (err) {
+                    this.log.error(`failed to start Syphon server: ${err}`)
+                    this.syphonServer = null
+                }
             }
             if (this.cfg.m) {
                 this.ffmpeg = new FFmpeg({
@@ -175,6 +198,13 @@ class BrowserWorker {
         if (this.ndiSender !== null)
             await this.ndiSender.destroy()
 
+        /*  destroy Syphon server  */
+        if (this.syphonServer !== null) {
+            try { this.syphonServer.dispose() }
+            catch (err) { this.log.error(`Syphon dispose error: ${err}`) }
+            this.syphonServer = null
+        }
+
         /*  destroy FFmpeg sender  */
         if (this.ffmpeg !== null)
             await this.ffmpeg.stop()
@@ -226,13 +256,30 @@ class BrowserWorker {
 
         /*  send video frame  */
         if (this.cfg.N) {
-            if (this.cfg.n) {
-                /*  convert from ARGB (Electron/Chromium on big endian CPU)
-                    to BGRA (supported input of NDI SDK). On little endian
-                    CPU the input is already BGRA.  */
-                if (os.endianness() === "BE")
-                    util.ImageBufferAdjustment.ARGBtoBGRA(buffer)
+            /*  normalize endianness once for any sink that wants BGRA  */
+            if ((this.cfg.n || this.syphonServer !== null) && os.endianness() === "BE")
+                util.ImageBufferAdjustment.ARGBtoBGRA(buffer)
 
+            /*  publish to Syphon BEFORE the NDI BGRA->BGRX in-place mutation
+                so Syphon receives the original alpha-preserving BGRA frame.
+                node-syphon's publishImageData requires Uint8ClampedArray
+                (not Node Buffer); wrap as a zero-copy view.  */
+            if (this.syphonServer !== null) {
+                try {
+                    const pixels = new Uint8ClampedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength)
+                    this.syphonServer.publishImageData(
+                        pixels,
+                        { x: 0, y: 0, width: size.width, height: size.height },
+                        { width: size.width, height: size.height },
+                        false
+                    )
+                }
+                catch (err) {
+                    this.log.error(`Syphon publish error: ${err}`)
+                }
+            }
+
+            if (this.cfg.n) {
                 /*  optionally convert from BGRA to BGRX (no alpha channel)  */
                 let fourCC = grandiose.FOURCC_BGRA
                 if (!this.cfg.v) {
