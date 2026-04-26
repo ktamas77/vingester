@@ -54,9 +54,18 @@ const version = {
     ffmpeg:    FFmpeg.info.version,
     vuejs:     pkg.dependencies.vue
 }
+let syphonAvailable = false
+if (process.platform === "darwin") {
+    try {
+        require("node-syphon")
+        syphonAvailable = true
+    }
+    catch (err) { /* node-syphon is an optional macOS-only dependency */ }
+}
 const support = {
     ndi:       grandiose.isSupportedCPU(),
-    srt:       FFmpeg.info.protocols?.srt?.input === true
+    srt:       FFmpeg.info.protocols?.srt?.input === true,
+    syphon:    syphonAvailable
 }
 electron.ipcMain.handle("version", (ev) => { return version })
 electron.ipcMain.handle("support", (ev) => { return support })
@@ -67,6 +76,7 @@ log.info(`using V8: ${version.v8}`)
 log.info(`using Node.js: ${version.node}`)
 log.info(`using NDI: ${version.ndi} (supported by CPU: ${support.ndi ? "yes" : "no"})`)
 log.info(`using FFmpeg: ${version.ffmpeg}`)
+log.info(`using Syphon: ${support.syphon ? "yes (macOS)" : "no"}`)
 log.info(`using Vue: ${version.vuejs}`)
 
 /*  support particular profiles  */
@@ -362,6 +372,7 @@ electron.app.on("ready", async () => {
         { iname: "v", itype: "boolean", def: true,          etype: "boolean", ename: "Output2SinkNDIAlpha" },
         { iname: "l", itype: "boolean", def: false,         etype: "boolean", ename: "Output2SinkNDITallyReload" },
         { iname: "m", itype: "boolean", def: false,         etype: "boolean", ename: "Output2SinkFFmpegEnabled" },
+        { iname: "s", itype: "boolean", def: false,         etype: "boolean", ename: "Output2SinkSyphonEnabled" },
         { iname: "R", itype: "string",  def: "vbr",         etype: "string",  ename: "Output2SinkFFmpegMode" },
         { iname: "F", itype: "string",  def: "matroska",    etype: "string",  ename: "Output2SinkFFmpegFormat" },
         { iname: "M", itype: "string",  def: "",            etype: "string",  ename: "Output2SinkFFmpegOptions" },
