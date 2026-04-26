@@ -333,7 +333,7 @@ const app = Vue.createApp({
             if (browser.d >= this.displays.length)
                 browser.d = (this.displays.length - 1)
             if (   (browser.D || browser.N)
-                && (!browser.N || (browser.N && (browser.n || browser.m || browser.s)))
+                && (!browser.N || (browser.N && (browser.n || browser.m || (browser.s && this.support.syphon))))
                 && browser.t !== "" && browser.u !== "")
                 delete this.invalid[browser.id].GLOBAL
             else
