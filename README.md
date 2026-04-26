@@ -6,6 +6,11 @@
 
 **Ingest Web Contents as Video Streams**
 
+> **Fork note:** This fork adds an **Apple Silicon (macOS arm64)** build
+> in addition to the existing macOS x64, Windows and Linux builds. See
+> the `Vingester-mac-a64.zip` artifact and the `package.d/grandiose+0.0.4.patch`
+> patch that fixes the missing `arm64` case in `grandiose`'s `binding.gyp`.
+
 About
 -----
 

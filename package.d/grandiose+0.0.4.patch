@@ -1,0 +1,21 @@
+diff --git a/node_modules/grandiose/binding.gyp b/node_modules/grandiose/binding.gyp
+index 0000000..0000001 100644
+--- a/node_modules/grandiose/binding.gyp
++++ b/node_modules/grandiose/binding.gyp
+@@ -67,6 +67,16 @@
+                     "libraries":    [ "-Wl,-rpath,@loader_path", "-lndi" ],
+                     "library_dirs": [ "<(ndi_dir)/lib/mac-x64" ]
+                 }
++            } ],
++            [ "OS == 'mac' and target_arch == 'arm64'", {
++                "copies": [ {
++                    "destination":  "build/Release",
++                    "files":        [ "<(ndi_dir)/lib/mac-x64/libndi.dylib" ]
++                } ],
++                "link_settings": {
++                    "libraries":    [ "-Wl,-rpath,@loader_path", "-lndi" ],
++                    "library_dirs": [ "<(ndi_dir)/lib/mac-x64" ]
++                }
+             } ]
+         ]
+     } ]
