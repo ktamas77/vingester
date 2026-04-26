@@ -68,6 +68,9 @@
         "@hapi/boom":                    "9.1.4",
         "hapi-plugin-header":            "1.1.4"
     },
+    "optionalDependencies": {
+        "node-syphon":                   "1.5.0"
+    },
     "main":                              "vingester-main.js",
     "upd":                               [ "!execa", "!got", "!dsig" ],
     "build": {
@@ -76,7 +79,8 @@
         "asar":                          true,
         "asarUnpack":                    [ "node_modules/@rse/ffmpeg/**",
                                            "node_modules/grandiose/**",
-                                           "node_modules/@discordjs/opus/**" ],
+                                           "node_modules/@discordjs/opus/**",
+                                           "node_modules/node-syphon/**" ],
         "removePackageScripts":          true,
         "compression":                   "normal",
         "directories": {
