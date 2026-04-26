@@ -256,7 +256,10 @@ class BrowserWorker {
 
         /*  send video frame  */
         if (this.cfg.N) {
-            /*  normalize endianness once for any sink that wants BGRA  */
+            /*  normalize endianness once for BGRA-consuming sinks (NDI, Syphon).
+                FFmpeg is intentionally excluded: it receives a JPEG below
+                (re-encoded by Electron's nativeImage) and handles pixel format
+                internally, so the raw buffer endianness is irrelevant to it.  */
             if ((this.cfg.n || this.syphonServer !== null) && os.endianness() === "BE")
                 util.ImageBufferAdjustment.ARGBtoBGRA(buffer)
 

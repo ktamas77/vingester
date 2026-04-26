@@ -17,6 +17,19 @@ const bluebird    = require("bluebird")
 const util        = require("./vingester-util.js")
 const pkg         = require("./package.json")
 
+/*  Syphon availability (optional, macOS-only) — used to gate the `s`
+    sub-sink in valid() so configs imported on unsupported platforms
+    are correctly flagged as invalid rather than silently producing
+    no output  */
+let syphonAvailable = false
+if (process.platform === "darwin") {
+    try {
+        require("node-syphon")
+        syphonAvailable = true
+    }
+    catch (err) { /* node-syphon is not installed on this platform */ }
+}
+
 /*  browser abstraction  */
 module.exports = class Browser {
     /*  create new browser  */
@@ -151,7 +164,7 @@ module.exports = class Browser {
     valid () {
         return (
             (this.cfg.D || this.cfg.N)
-            && (!this.cfg.N || (this.cfg.N && (this.cfg.n || this.cfg.m || this.cfg.s)))
+            && (!this.cfg.N || (this.cfg.N && (this.cfg.n || this.cfg.m || (this.cfg.s && syphonAvailable))))
             && this.cfg.t !== ""
             && this.cfg.u !== ""
         )
